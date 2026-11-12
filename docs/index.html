@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Informativa sulla privacy – Valida Buoni</title>
+  <style>
+    :root {
+      --sfondo: #F3F5F9;
+      --superficie: #FFFFFF;
+      --testo: #1B1F24;
+      --testo-attenuato: #5F6670;
+      --primario: #1565C0;
+      --bordo: #D9DEE5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --sfondo: #121417;
+        --superficie: #1E2227;
+        --testo: #E6E8EB;
+        --testo-attenuato: #A0A7B0;
+        --primario: #8AB4F8;
+        --bordo: #353B43;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 20px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--sfondo);
+      color: var(--testo);
+      line-height: 1.6;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--superficie);
+      border: 1px solid var(--bordo);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.7rem;
+    }
+    h2 {
+      margin-top: 1.8rem;
+      font-size: 1.2rem;
+    }
+    p, li {
+      color: var(--testo);
+    }
+    .nota {
+      color: var(--testo-attenuato);
+      font-size: 0.95rem;
+    }
+    a {
+      color: var(--primario);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Informativa sulla privacy di Valida Buoni</h1>
+    <p class="nota">Ultimo aggiornamento: 12 novembre 2026</p>
+
+    <p>
+      <strong>Valida Buoni</strong> (ID pacchetto <code>it.lopo.validabuonicartecultura</code>)
+      è un'applicazione Android libera e open source sviluppata da Enrico Battocchi per agevolare
+      gli esercenti nella validazione dei buoni su <em>Carta del Docente</em> e
+      <em>Carte Cultura Giovani e Merito</em>.
+    </p>
+
+    <h2>1. Nessuna raccolta o trasmissione di dati personali</h2>
+    <p>
+      L'applicazione <strong>non raccoglie, non registra, non analizza e non trasmette</strong>
+      alcun dato personale o di utilizzo verso lo sviluppatore o verso terze parti. Non sono
+      presenti tracciatori pubblicitari, strumenti di telemetria o server intermedi.
+    </p>
+
+    <h2>2. Dati salvati sul dispositivo</h2>
+    <p>
+      I codici esercente inseriti nella schermata <em>Impostazioni</em> vengono salvati
+      esclusivamente nella memoria interna del telefono (tramite le preferenze private di
+      Android) al solo scopo di precompilare automaticamente il campo «Codice esercente» quando
+      l'utente apre la pagina di validazione del portale scelto. L'utente può modificarli o
+      cancellarli in qualsiasi momento dalle Impostazioni dell'app o cancellando i dati
+      dell'applicazione.
+    </p>
+
+    <h2>3. Scansione di codici QR e codici a barre</h2>
+    <p>
+      Per leggere il codice del buono da un codice QR o da un codice a barre, l'applicazione
+      utilizza il componente di sistema <em>Google Play Services Code Scanner</em>. L'app
+      <strong>non richiede il permesso di accesso alla fotocamera</strong>: l'inquadratura e il
+      riconoscimento avvengono interamente sul dispositivo tramite i servizi di sistema di Google,
+      che restituiscono all'applicazione unicamente la stringa di testo del codice letto.
+      Nessuna immagine o flusso video viene acquisito o memorizzato dall'app.
+    </p>
+
+    <h2>4. Navigazione sui portali ufficiali</h2>
+    <p>
+      L'applicazione mostra direttamente, tramite il componente <code>WebView</code> di sistema,
+      le pagine pubbliche ufficiali di validazione dei buoni gestite dalle amministrazioni
+      competenti:
+    </p>
+    <ul>
+      <li>
+        Carta del Docente:
+        <a href="https://www.cartadeldocente.istruzione.it/docentiEsercente/#/validaBuono">
+          https://www.cartadeldocente.istruzione.it/docentiEsercente/#/validaBuono
+        </a>
+      </li>
+      <li>
+        Carte Cultura Giovani e Merito:
+        <a href="https://cartegiovani.cultura.gov.it/giovanimeritoEsercente/#/validaBuono">
+          https://cartegiovani.cultura.gov.it/giovanimeritoEsercente/#/validaBuono
+        </a>
+      </li>
+    </ul>
+    <p>
+      La navigazione su tali portali è soggetta alle rispettive informative sulla privacy e
+      condizioni d'uso del Ministero dell'Istruzione e del Merito e del Ministero della Cultura.
+    </p>
+
+    <h2>5. Assenza di affiliazione governativa</h2>
+    <p>
+      Valida Buoni è un'applicazione indipendente e <strong>non ufficiale</strong>: non è
+      collegata, patrocinata né approvata dal Ministero dell'Istruzione e del Merito, dal
+      Ministero della Cultura, da SOGEI S.p.A. o da altri enti pubblici.
+    </p>
+
+    <h2>6. Contatti e codice sorgente</h2>
+    <p>
+      Il codice sorgente completo dell'applicazione è pubblico e consultabile su GitHub:
+      <a href="https://github.com/enricobattocchi/valida-buoni-carte-cultura">
+        github.com/enricobattocchi/valida-buoni-carte-cultura
+      </a>.
+    </p>
+    <p>
+      Per qualsiasi richiesta di chiarimento relativa a questa informativa è possibile scrivere a
+      Enrico Battocchi all'indirizzo <a href="mailto:lopo@lopo.it">lopo@lopo.it</a>.
+    </p>
+  </main>
+</body>
+</html>

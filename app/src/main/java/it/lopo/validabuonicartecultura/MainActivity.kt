@@ -104,7 +104,8 @@ class MainActivity : Activity() {
             .setTitle("Valida Buoni ${versione()}")
             .setMessage(
                 "Valida Buoni apre la pagina ufficiale «Valida Buono» dei portali " +
-                    "Carta del Docente e Carte Cultura Giovani e Merito, inserisce il " +
+                    "Carta del Docente (cartadeldocente.istruzione.it) e Carte Cultura " +
+                    "Giovani e Merito (cartegiovani.cultura.gov.it), inserisce il " +
                     "codice esercente salvato e legge il codice del buono da un QR " +
                     "o da un codice a barre.\n\n" +
                     "La conferma della validazione resta sempre a te, sulla pagina del portale.\n\n" +
@@ -114,6 +115,9 @@ class MainActivity : Activity() {
                     "Realizzata da $AUTORE. Il codice sorgente è pubblico su GitHub."
             )
             .setPositiveButton("Chiudi", null)
+            .setNegativeButton("Privacy") { _, _ ->
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY)))
+            }
             .setNeutralButton("Codice sorgente") { _, _ ->
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(REPOSITORY)))
             }
@@ -123,6 +127,7 @@ class MainActivity : Activity() {
     companion object {
         private const val AUTORE = "Enrico Battocchi"
         private const val REPOSITORY = "https://github.com/enricobattocchi/valida-buoni-carte-cultura"
+        private const val PRIVACY = "https://enricobattocchi.github.io/valida-buoni-carte-cultura/"
     }
 
     private fun intestazione() = LinearLayout(this).apply {
