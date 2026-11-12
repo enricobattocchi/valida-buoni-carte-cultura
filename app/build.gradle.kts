@@ -11,12 +11,28 @@ android {
         applicationId = "it.lopo.validabuoni"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // Il flusso di rilascio li passa con -PversionCode e -PversionName, ricavati dal tag.
+        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 1
+        versionName = (findProperty("versionName") as String?) ?: "1.0"
+    }
+
+    // La chiave di firma non sta nel repository: arriva dalle variabili d'ambiente,
+    // che su GitHub sono i segreti del repository. Senza variabili la release resta non firmata.
+    val chiave = System.getenv("KEYSTORE_FILE")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (chiave != null) {
+            create("release") {
+                storeFile = chiave
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (chiave != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
