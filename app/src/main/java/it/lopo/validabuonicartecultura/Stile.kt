@@ -1,4 +1,4 @@
-package it.lopo.validabuoni
+package it.lopo.validabuonicartecultura
 
 import android.content.Context
 import android.content.res.ColorStateList

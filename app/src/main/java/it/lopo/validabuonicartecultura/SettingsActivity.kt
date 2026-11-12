@@ -1,4 +1,4 @@
-package it.lopo.validabuoni
+package it.lopo.validabuonicartecultura
 
 import android.app.Activity
 import android.graphics.Typeface

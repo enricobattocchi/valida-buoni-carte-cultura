@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "it.lopo.validabuoni"
+    namespace = "it.lopo.validabuonicartecultura"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "it.lopo.validabuoni"
+        applicationId = "it.lopo.validabuonicartecultura"
         minSdk = 26
         targetSdk = 34
         // Il flusso di rilascio li passa con -PversionCode e -PversionName, ricavati dal tag.

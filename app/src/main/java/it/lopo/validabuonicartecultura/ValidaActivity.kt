@@ -1,4 +1,4 @@
-package it.lopo.validabuoni
+package it.lopo.validabuonicartecultura
 
 import android.annotation.SuppressLint
 import android.app.Activity
