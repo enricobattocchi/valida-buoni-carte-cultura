@@ -65,8 +65,7 @@ jobs:
 
           ### Installazione
 
-          Scarica \`ValidaBuoni-$VERSIONE.apk\` sul telefono e aprilo; serve Android 8.0 o successivo.
-          Il file \`.aab\` serve solo per la pubblicazione sul Play Store.
+          Scarica \`ValidaBuoni-$VERSIONE.apk\` sul telefono e aprilo; serve Android 8.0 o successivo. Il file \`.aab\` serve solo per la pubblicazione sul Play Store.
           EOF
 
       - name: Pubblica la release
