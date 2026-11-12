@@ -12,32 +12,6 @@ Impostazioni e riempie il codice buono leggendo un QR o un codice a barre.
 - Con GitHub: carica il progetto in un repository; il flusso "Compila APK"
   produce il file scaricabile dalla pagina Actions.
 
-## Rilascio
-
-Il flusso "Rilascio" crea una release su GitHub con l'APK firmato e il bundle
-AAB per il Play Store ogni volta che carichi un tag di versione:
-
-```
-git tag v1.1.0
-git push origin v1.1.0
-```
-
-Prima del tag, aggiungi a `CHANGELOG.md` la sezione `## 1.1.0`: il flusso la
-usa come note della release e si ferma con un errore se manca.
-
-Il numero di versione Android deriva dal tag: `v1.2.3` diventa 10203.
-
-Prima del primo rilascio, crea la chiave di firma e caricala nei segreti del
-repository:
-
-```
-./scripts/crea-chiave-firma.sh
-```
-
-Lo script salva la chiave e la password in `~/.android-keys`. Fai una copia di
-sicurezza dei due file: chi installa l'app può aggiornarla solo con versioni
-firmate dalla stessa chiave.
-
 ## Se i portali cambiano
 
 Indirizzi in `Carta.kt`; nomi dei campi (`codiceEsercente`, `codiceVoucher`)
