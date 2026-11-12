@@ -22,6 +22,9 @@ git tag v1.1.0
 git push origin v1.1.0
 ```
 
+Prima del tag, aggiungi a `CHANGELOG.md` la sezione `## 1.1.0`: il flusso la
+usa come note della release e si ferma con un errore se manca.
+
 Il numero di versione Android deriva dal tag: `v1.2.3` diventa 10203.
 
 Prima del primo rilascio, crea la chiave di firma e caricala nei segreti del

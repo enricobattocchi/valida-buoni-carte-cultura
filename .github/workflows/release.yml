@@ -52,7 +52,24 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "dist/ValidaBuoni-$VERSIONE.apk"
           cp app/build/outputs/bundle/release/app-release.aab "dist/ValidaBuoni-$VERSIONE.aab"
 
+      - name: Prepara le note dal CHANGELOG
+        run: |
+          # Prende le righe tra "## <versione>" e la sezione successiva.
+          awk -v v="## $VERSIONE" '$0 == v { dentro = 1; next } /^## / { dentro = 0 } dentro' \
+            CHANGELOG.md > note.md
+          if ! grep -q '[^[:space:]]' note.md; then
+            echo "::error::Manca la sezione \"## $VERSIONE\" in CHANGELOG.md."
+            exit 1
+          fi
+          cat >> note.md <<EOF
+
+          ### Installazione
+
+          Scarica \`ValidaBuoni-$VERSIONE.apk\` sul telefono e aprilo; serve Android 8.0 o successivo.
+          Il file \`.aab\` serve solo per la pubblicazione sul Play Store.
+          EOF
+
       - name: Pubblica la release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "Valida Buoni $VERSIONE" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "Valida Buoni $VERSIONE" --notes-file note.md
