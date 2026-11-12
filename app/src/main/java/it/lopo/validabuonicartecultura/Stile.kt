@@ -1,10 +1,12 @@
 package it.lopo.validabuonicartecultura
 
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
@@ -14,8 +16,10 @@ import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 
 /** Elementi grafici comuni alle schermate, disegnati in codice come il resto dell'app. */
@@ -163,4 +167,28 @@ private fun Activity.barraTitolo(titolo: String) = LinearLayout(this).apply {
         ellipsize = TextUtils.TruncateAt.END
         setPadding(dp(8), 0, 0, 0)
     }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+}
+
+/**
+ * Finestra di dialogo con i colori e gli angoli arrotondati dell'app, al posto
+ * del dialogo di sistema.
+ */
+fun Activity.mostraFinestra(costruisci: LinearLayout.(Dialog) -> Unit) {
+    val finestra = Dialog(this)
+    val contenuto = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(dp(24), dp(24), dp(24), dp(16))
+        background = GradientDrawable().apply {
+            cornerRadius = dp(28).toFloat()
+            setColor(colore(R.color.superficie))
+        }
+        costruisci(finestra)
+    }
+    finestra.setContentView(ScrollView(this).apply { addView(contenuto) })
+    finestra.window?.apply {
+        setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val larghezza = (resources.displayMetrics.widthPixels - dp(48)).coerceAtMost(dp(480))
+        setLayout(larghezza, WindowManager.LayoutParams.WRAP_CONTENT)
+    }
+    finestra.show()
 }

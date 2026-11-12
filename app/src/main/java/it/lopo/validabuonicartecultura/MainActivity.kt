@@ -1,16 +1,12 @@
 package it.lopo.validabuonicartecultura
 
 import android.app.Activity
-import android.app.Dialog
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
-import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -106,8 +102,7 @@ class MainActivity : Activity() {
      * Finestra Informazioni disegnata in codice: il dialogo di sistema mette i tre
      * pulsanti uno sotto l'altro e ha uno sfondo grigio estraneo ai colori dell'app.
      */
-    private fun mostraInformazioni() {
-        val finestra = Dialog(this)
+    private fun mostraInformazioni() = mostraFinestra { finestra ->
         val avvolgi = { LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -117,16 +112,7 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = dp(margineDp) } }
 
-        val contenuto = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(24), dp(24), dp(12))
-            background = GradientDrawable().apply {
-                cornerRadius = dp(28).toFloat()
-                setColor(colore(R.color.superficie))
-            }
-        }
-
-        contenuto.addView(LinearLayout(this).apply {
+        addView(LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             addView(ImageView(context).apply {
@@ -142,33 +128,33 @@ class MainActivity : Activity() {
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         })
 
-        contenuto.addView(testo(
+        addView(testo(
             "Apre la pagina ufficiale «Valida Buono» di Carta del Docente " +
                 "(cartadeldocente.istruzione.it) e di Carte Cultura Giovani e Merito " +
                 "(cartegiovani.cultura.gov.it), inserisce il codice esercente salvato e " +
                 "legge il codice del buono da un QR o da un codice a barre.",
             16f
         ), riga(20))
-        contenuto.addView(testo(
+        addView(testo(
             "La conferma della validazione resta sempre a te, sulla pagina del portale. " +
                 "I codici esercente restano solo su questo telefono.",
             16f
         ), riga(12))
-        contenuto.addView(testo(
+        addView(testo(
             "App non ufficiale, non collegata al Ministero dell'Istruzione e del Merito " +
                 "né al Ministero della Cultura.\n\nRealizzata da $AUTORE.\nLicenza GPL-3.0.",
             14f,
             R.color.testo_attenuato
         ), riga(12))
 
-        contenuto.addView(pulsante("Informativa sulla privacy", primario = false) {
+        addView(pulsante("Informativa sulla privacy", primario = false) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY)))
         }, riga(20))
-        contenuto.addView(pulsante("Codice sorgente su GitHub", primario = false) {
+        addView(pulsante("Codice sorgente su GitHub", primario = false) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(REPOSITORY)))
         }, riga(8))
 
-        contenuto.addView(testo("Chiudi", 16f, R.color.primario, grassetto = true).apply {
+        addView(testo("Chiudi", 16f, R.color.primario, grassetto = true).apply {
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = sfondoTattile(colore(R.color.superficie), 12)
             isClickable = true
@@ -178,14 +164,6 @@ class MainActivity : Activity() {
             topMargin = dp(8)
             gravity = Gravity.END
         })
-
-        finestra.setContentView(ScrollView(this).apply { addView(contenuto) })
-        finestra.window?.apply {
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            val larghezza = (resources.displayMetrics.widthPixels - dp(48)).coerceAtMost(dp(480))
-            setLayout(larghezza, WindowManager.LayoutParams.WRAP_CONTENT)
-        }
-        finestra.show()
     }
 
     companion object {

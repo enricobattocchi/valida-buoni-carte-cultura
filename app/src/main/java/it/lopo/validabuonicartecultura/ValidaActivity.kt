@@ -2,7 +2,6 @@ package it.lopo.validabuonicartecultura
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Typeface
@@ -18,7 +17,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -203,20 +201,31 @@ class ValidaActivity : Activity() {
             background = sfondoCampo()
             setPadding(dp(16), dp(12), dp(16), dp(12))
         }
-        val contenitore = FrameLayout(this).apply {
-            setPadding(dp(20), dp(12), dp(20), dp(4))
-            addView(campo)
+        mostraFinestra { finestra ->
+            val riga = { margineDp: Int -> LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(margineDp) } }
+
+            addView(testo("Controlla il codice buono", 20f, grassetto = true))
+            addView(testo("Contenuto letto:\n$testo", 15f, R.color.testo_attenuato), riga(12))
+            addView(campo, riga(16))
+            addView(LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(
+                    pulsante("Annulla", primario = false) { finestra.dismiss() },
+                    LinearLayout.LayoutParams(0, dp(56), 1f)
+                )
+                addView(
+                    pulsante("Usa") {
+                        val scelto = campo.text.toString().trim()
+                        finestra.dismiss()
+                        if (scelto.isNotEmpty()) scriviCodiceBuono(scelto)
+                    },
+                    LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginStart = dp(10) }
+                )
+            }, riga(20))
         }
-        AlertDialog.Builder(this)
-            .setTitle("Controlla il codice buono")
-            .setMessage("Contenuto letto:\n$testo")
-            .setView(contenitore)
-            .setPositiveButton("Usa") { _, _ ->
-                val scelto = campo.text.toString().trim()
-                if (scelto.isNotEmpty()) scriviCodiceBuono(scelto)
-            }
-            .setNegativeButton("Annulla", null)
-            .show()
     }
 
     private fun scriviCodiceBuono(codice: String) {

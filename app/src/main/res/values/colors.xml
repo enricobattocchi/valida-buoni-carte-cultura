@@ -2,8 +2,6 @@
 <resources>
     <color name="primario">#1565C0</color>
     <color name="su_primario">#FFFFFF</color>
-    <color name="barra">#1565C0</color>
-    <color name="barra_scura">#0D47A1</color>
     <color name="sfondo">#F3F5F9</color>
     <color name="superficie">#FFFFFF</color>
     <color name="testo">#1B1F24</color>

@@ -34,7 +34,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::Manca il segreto KEYSTORE_BASE64: vedi la sezione Rilascio del README."
+            echo "::error::Manca il segreto KEYSTORE_BASE64: esegui ./scripts/crea-chiave-firma.sh."
             exit 1
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
