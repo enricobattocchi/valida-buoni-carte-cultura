@@ -144,8 +144,7 @@ fun Activity.schermata(titolo: String?, contenuto: View, piede: View? = null): V
 private fun Activity.barraTitolo(titolo: String) = LinearLayout(this).apply {
     orientation = LinearLayout.HORIZONTAL
     gravity = Gravity.CENTER_VERTICAL
-    minimumHeight = dp(60)
-    setPadding(dp(4), 0, dp(16), 0)
+    setPadding(dp(4), dp(6), dp(16), dp(6))
     setBackgroundColor(colore(R.color.sfondo))
 
     addView(ImageView(context).apply {
