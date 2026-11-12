@@ -111,7 +111,7 @@ class MainActivity : Activity() {
                     "L'app salva i codici esercente solo su questo telefono.\n\n" +
                     "App non ufficiale, non collegata al Ministero dell'Istruzione e del " +
                     "Merito né al Ministero della Cultura.\n\n" +
-                    "Realizzata da $AUTORE.\n$REPOSITORY"
+                    "Realizzata da $AUTORE. Il codice sorgente è pubblico su GitHub."
             )
             .setPositiveButton("Chiudi", null)
             .setNeutralButton("Codice sorgente") { _, _ ->
