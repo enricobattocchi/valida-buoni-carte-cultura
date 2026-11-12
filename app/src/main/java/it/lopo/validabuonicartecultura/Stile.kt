@@ -1,5 +1,6 @@
 package it.lopo.validabuonicartecultura
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -8,7 +9,11 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.StateListDrawable
+import android.os.Build
+import android.text.TextUtils
 import android.view.Gravity
+import android.view.View
+import android.view.WindowInsets
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -95,4 +100,68 @@ fun Context.pulsante(
             })
         }
     }
+}
+
+/**
+ * Struttura comune delle schermate: barra del titolo facoltativa con il pulsante
+ * Indietro, contenuto elastico e piede facoltativo.
+ *
+ * Da Android 15, con targetSdk 35 o superiore, l'app occupa tutto lo schermo anche
+ * sotto le barre di sistema, e adjustResize non restringe più la finestra quando
+ * compare la tastiera. Qui aggiungo quindi lo spazio della barra di stato in alto
+ * e il maggiore tra barra di navigazione e tastiera in basso.
+ */
+fun Activity.schermata(titolo: String?, contenuto: View, piede: View? = null): View {
+    val radice = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setBackgroundColor(colore(R.color.sfondo))
+    }
+    val barra = titolo?.let { barraTitolo(it) }
+    barra?.let { radice.addView(it) }
+    radice.addView(contenuto, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+    piede?.let { radice.addView(it) }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        val inAlto = barra ?: radice
+        val baseAlto = inAlto.paddingTop
+        val baseLati = radice.paddingLeft
+        radice.setOnApplyWindowInsetsListener { _, insets ->
+            val sistema = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            val tastiera = insets.getInsets(WindowInsets.Type.ime())
+            inAlto.setPadding(inAlto.paddingLeft, baseAlto + sistema.top, inAlto.paddingRight, inAlto.paddingBottom)
+            radice.setPadding(
+                baseLati + sistema.left,
+                radice.paddingTop,
+                baseLati + sistema.right,
+                maxOf(sistema.bottom, tastiera.bottom)
+            )
+            WindowInsets.CONSUMED
+        }
+    }
+    return radice
+}
+
+private fun Activity.barraTitolo(titolo: String) = LinearLayout(this).apply {
+    orientation = LinearLayout.HORIZONTAL
+    gravity = Gravity.CENTER_VERTICAL
+    minimumHeight = dp(60)
+    setPadding(dp(4), 0, dp(16), 0)
+    setBackgroundColor(colore(R.color.sfondo))
+
+    addView(ImageView(context).apply {
+        setImageResource(R.drawable.ic_indietro)
+        imageTintList = ColorStateList.valueOf(colore(R.color.testo))
+        scaleType = ImageView.ScaleType.CENTER
+        contentDescription = "Indietro"
+        background = sfondoTattile(colore(R.color.sfondo), 24)
+        isClickable = true
+        isFocusable = true
+        setOnClickListener { finish() }
+    }, LinearLayout.LayoutParams(dp(48), dp(48)))
+
+    addView(testo(titolo, 20f, grassetto = true).apply {
+        maxLines = 1
+        ellipsize = TextUtils.TruncateAt.END
+        setPadding(dp(8), 0, 0, 0)
+    }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
 }

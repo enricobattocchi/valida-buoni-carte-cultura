@@ -7,9 +7,12 @@ import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebChromeClient
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -38,7 +41,6 @@ class ValidaActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        actionBar?.setDisplayHomeAsUpEnabled(true)
 
         carta = Carta.valueOf(intent.getStringExtra(EXTRA_CARTA) ?: Carta.DOCENTE.name)
         title = carta.nome
@@ -49,6 +51,10 @@ class ValidaActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                     paginaPronta = false
+                }
+
+                override fun doUpdateVisitedHistory(view: WebView, url: String, ricarica: Boolean) {
+                    aggiornaIndietro()
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
@@ -103,13 +109,12 @@ class ValidaActivity : Activity() {
             LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(10) }
         )
 
-        setContentView(LinearLayout(this).apply {
+        val pagina = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(colore(R.color.sfondo))
             addView(caricamento)
             addView(web)
-            addView(barra)
-        })
+        }
+        setContentView(schermata(carta.nome, pagina, barra))
 
         if (Impostazioni.codiceEsercente(this, carta).isEmpty()) {
             Toast.makeText(
@@ -234,12 +239,32 @@ class ValidaActivity : Activity() {
         super.onDestroy()
     }
 
-    override fun onNavigateUp(): Boolean {
-        finish()
-        return true
+    /**
+     * Da Android 13 il tasto Indietro passa da OnBackInvokedDispatcher e, con
+     * targetSdk 36, onBackPressed non viene più chiamato. Registro il callback solo
+     * quando la pagina ha una cronologia: altrimenti Indietro chiude la schermata
+     * con l'animazione di sistema.
+     */
+    private fun aggiornaIndietro() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val serve = web.canGoBack()
+        if (serve == indietroRegistrato) return
+        val dispatcher = onBackInvokedDispatcher
+        if (serve) {
+            dispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, indietroNellaPagina)
+        } else {
+            dispatcher.unregisterOnBackInvokedCallback(indietroNellaPagina)
+        }
+        indietroRegistrato = serve
     }
 
-    @Deprecated("Sufficiente per il livello di sistema a cui è destinata l'app")
+    private val indietroNellaPagina by lazy {
+        OnBackInvokedCallback { web.goBack() }
+    }
+    private var indietroRegistrato = false
+
+    /** Usato solo fino ad Android 12. */
+    @Deprecated("Sostituito da OnBackInvokedDispatcher da Android 13")
     override fun onBackPressed() {
         if (web.canGoBack()) web.goBack() else super.onBackPressed()
     }

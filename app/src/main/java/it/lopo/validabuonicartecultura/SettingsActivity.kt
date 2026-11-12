@@ -14,7 +14,6 @@ class SettingsActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        actionBar?.setDisplayHomeAsUpEnabled(true)
 
         val radice = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -64,11 +63,6 @@ class SettingsActivity : Activity() {
             finish()
         })
 
-        setContentView(ScrollView(this).apply { addView(radice) })
-    }
-
-    override fun onNavigateUp(): Boolean {
-        finish()
-        return true
+        setContentView(schermata("Impostazioni", ScrollView(this).apply { addView(radice) }))
     }
 }

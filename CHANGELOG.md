@@ -2,6 +2,12 @@
 
 Il flusso di rilascio usa come note la sezione della versione del tag: prima di creare il tag `vX.Y.Z`, aggiungi qui la sezione `## X.Y.Z`. Scrivi ogni paragrafo e ogni punto su una sola riga: nelle note delle release GitHub mostra ogni a capo.
 
+## 1.1.0
+
+- Supporta Android 16: l'app occupa tutto lo schermo e lascia spazio alle barre di sistema e alla tastiera.
+- Barra del titolo con il pulsante Indietro, uguale in tutte le schermate.
+- Il tasto Indietro torna alla pagina precedente del portale e usa l'animazione di sistema.
+
 ## 1.0.0
 
 Prima versione pubblica.

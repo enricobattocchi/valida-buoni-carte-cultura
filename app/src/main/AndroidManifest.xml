@@ -7,6 +7,7 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="Valida Buoni"
+        android:enableOnBackInvokedCallback="true"
         android:theme="@style/Tema">
 
         <!-- Fa scaricare il modulo del lettore di codici già all'installazione. -->
@@ -16,7 +17,6 @@
 
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Tema.Home"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

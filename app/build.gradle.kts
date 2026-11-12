@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "it.lopo.validabuonicartecultura"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "it.lopo.validabuonicartecultura"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         // Il flusso di rilascio li passa con -PversionCode e -PversionName, ricavati dal tag.
         versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 1
         versionName = (findProperty("versionName") as String?) ?: "1.0"

@@ -57,10 +57,10 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = dp(32) })
 
-        setContentView(ScrollView(this).apply {
+        setContentView(schermata(null, ScrollView(this).apply {
             isFillViewport = true
             addView(radice)
-        })
+        }))
     }
 
     override fun onResume() {
