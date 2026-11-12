@@ -16,3 +16,11 @@ Impostazioni e riempie il codice buono leggendo un QR o un codice a barre.
 
 Indirizzi in `Carta.kt`; nomi dei campi (`codiceEsercente`, `codiceVoucher`)
 in `ValidaActivity.kt`.
+
+## Licenza
+
+Copyright (C) 2026 Enrico Battocchi.
+
+Distribuito con licenza GNU General Public License versione 3: vedi il file
+[LICENSE](LICENSE). App non ufficiale, non collegata al Ministero
+dell'Istruzione e del Merito né al Ministero della Cultura.
