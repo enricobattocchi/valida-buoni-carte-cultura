@@ -242,12 +242,12 @@ class ValidaActivity : Activity() {
     /**
      * Da Android 13 il tasto Indietro passa da OnBackInvokedDispatcher e, con
      * targetSdk 36, onBackPressed non viene più chiamato. Registro il callback solo
-     * quando la pagina ha una cronologia: altrimenti Indietro chiude la schermata
-     * con l'animazione di sistema.
+     * quando la pagina ha una pagina precedente a cui tornare: altrimenti Indietro
+     * chiude la schermata con l'animazione di sistema.
      */
     private fun aggiornaIndietro() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        val serve = web.canGoBack()
+        val serve = passiIndietro() != null
         if (serve == indietroRegistrato) return
         val dispatcher = onBackInvokedDispatcher
         if (serve) {
@@ -259,14 +259,38 @@ class ValidaActivity : Activity() {
     }
 
     private val indietroNellaPagina by lazy {
-        OnBackInvokedCallback { web.goBack() }
+        OnBackInvokedCallback { tornaIndietro() }
     }
     private var indietroRegistrato = false
+
+    /**
+     * Quanti passi indietro servono per arrivare a una pagina diversa da quella
+     * aperta, o null se non ce n'è una. Salta le copie della pagina aperta, che
+     * Ricarica aggiunge alla cronologia, e gli indirizzi che finiscono in "#/":
+     * su entrambi i portali quella pagina rimanda subito alla Home, quindi
+     * tornarci riporterebbe sempre alla Home.
+     */
+    private fun passiIndietro(): Int? {
+        val cronologia = web.copyBackForwardList()
+        val corrente = cronologia.currentItem?.url ?: return null
+        for (indice in cronologia.currentIndex - 1 downTo 0) {
+            val url = cronologia.getItemAtIndex(indice).url
+            if (url != corrente && Uri.parse(url).fragment != "/") {
+                return indice - cronologia.currentIndex
+            }
+        }
+        return null
+    }
+
+    private fun tornaIndietro() {
+        val passi = passiIndietro()
+        if (passi != null) web.goBackOrForward(passi) else finish()
+    }
 
     /** Usato solo fino ad Android 12. */
     @Deprecated("Sostituito da OnBackInvokedDispatcher da Android 13")
     override fun onBackPressed() {
-        if (web.canGoBack()) web.goBack() else super.onBackPressed()
+        if (passiIndietro() != null) tornaIndietro() else super.onBackPressed()
     }
 
     companion object {
