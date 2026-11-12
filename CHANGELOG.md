@@ -5,6 +5,7 @@ Il flusso di rilascio usa come note la sezione della versione del tag: prima di 
 ## 1.2.0
 
 - L'app si chiama «Valida Buoni Carte Cultura»; sotto l'icona resta «Valida Buoni».
+- Finestra Informazioni ridisegnata, con i collegamenti all'informativa sulla privacy e al codice sorgente.
 
 ## 1.1.0
 
