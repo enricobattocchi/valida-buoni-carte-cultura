@@ -89,7 +89,7 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         ) }
-        addView(testo("Valida Buoni ${versione()} · App non ufficiale", 13f, R.color.testo_attenuato), avvolgi())
+        addView(testo("$NOME ${versione()} · App non ufficiale", 13f, R.color.testo_attenuato), avvolgi())
         addView(testo("Informazioni", 14f, R.color.primario, grassetto = true).apply {
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = sfondoTattile(colore(R.color.sfondo), 12)
@@ -101,9 +101,9 @@ class MainActivity : Activity() {
 
     private fun mostraInformazioni() {
         AlertDialog.Builder(this)
-            .setTitle("Valida Buoni ${versione()}")
+            .setTitle("$NOME ${versione()}")
             .setMessage(
-                "Valida Buoni apre la pagina ufficiale «Valida Buono» dei portali " +
+                "$NOME apre la pagina ufficiale «Valida Buono» dei portali " +
                     "Carta del Docente (cartadeldocente.istruzione.it) e Carte Cultura " +
                     "Giovani e Merito (cartegiovani.cultura.gov.it), inserisce il " +
                     "codice esercente salvato e legge il codice del buono da un QR " +
@@ -125,6 +125,7 @@ class MainActivity : Activity() {
     }
 
     companion object {
+        private const val NOME = "Valida Buoni Carte Cultura"
         private const val AUTORE = "Enrico Battocchi"
         private const val REPOSITORY = "https://github.com/enricobattocchi/valida-buoni-carte-cultura"
         private const val PRIVACY = "https://enricobattocchi.github.io/valida-buoni-carte-cultura/"
@@ -138,7 +139,7 @@ class MainActivity : Activity() {
             background = GradientDrawable().apply { cornerRadius = dp(14).toFloat() }
             clipToOutline = true
         }, LinearLayout.LayoutParams(dp(52), dp(52)))
-        addView(testo("Valida Buoni", 28f, grassetto = true).apply {
+        addView(testo(NOME, 26f, grassetto = true).apply {
             setPadding(dp(16), 0, 0, 0)
         })
     }

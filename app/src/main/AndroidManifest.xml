@@ -6,7 +6,7 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="Valida Buoni"
+        android:label="Valida Buoni Carte Cultura"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Tema">
 
@@ -17,6 +17,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:label="Valida Buoni"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

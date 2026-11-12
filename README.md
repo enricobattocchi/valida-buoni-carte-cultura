@@ -1,4 +1,4 @@
-# Valida Buoni
+# Valida Buoni Carte Cultura
 
 App Android che apre la pagina reale "Valida Buono" di Carta del Docente e delle
 Carte Cultura Giovani e Merito, precompila il codice esercente salvato nelle

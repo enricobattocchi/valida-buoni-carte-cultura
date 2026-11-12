@@ -1,4 +1,4 @@
-# Scheda Play Store – Valida Buoni
+# Scheda Play Store – Valida Buoni Carte Cultura
 
 Questo file raccoglie tutti i testi e le risposte ai moduli della **Google Play Console** per pubblicare l'app.
 
@@ -18,7 +18,7 @@ Valida i buoni di Carta del Docente e Carte Cultura Giovani e Merito col QR.
 
 ### Descrizione completa *(max 4000 caratteri)*
 ```text
-Valida Buoni aiuta gli esercenti a validare rapidamente i buoni di Carta del Docente e delle Carte Cultura Giovani e Merito senza dover digitare ogni volta a mano il codice esercente e il codice del buono.
+Valida Buoni Carte Cultura aiuta gli esercenti a validare rapidamente i buoni di Carta del Docente e delle Carte Cultura Giovani e Merito senza dover digitare ogni volta a mano il codice esercente e il codice del buono.
 
 COME FUNZIONA
 • Salva una sola volta il tuo codice esercente (5 caratteri) nelle Impostazioni, uno per ciascun portale.

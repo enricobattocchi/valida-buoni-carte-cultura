@@ -49,8 +49,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease bundleRelease -PversionCode="$CODICE" -PversionName="$VERSIONE"
           mkdir dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/ValidaBuoni-$VERSIONE.apk"
-          cp app/build/outputs/bundle/release/app-release.aab "dist/ValidaBuoni-$VERSIONE.aab"
+          cp app/build/outputs/apk/release/app-release.apk "dist/ValidaBuoniCarteCultura-$VERSIONE.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "dist/ValidaBuoniCarteCultura-$VERSIONE.aab"
 
       - name: Prepara le note dal CHANGELOG
         run: |
@@ -65,10 +65,10 @@ jobs:
 
           ### Installazione
 
-          Scarica \`ValidaBuoni-$VERSIONE.apk\` sul telefono e aprilo; serve Android 8.0 o successivo. Il file \`.aab\` serve solo per la pubblicazione sul Play Store.
+          Scarica \`ValidaBuoniCarteCultura-$VERSIONE.apk\` sul telefono e aprilo; serve Android 8.0 o successivo. Il file \`.aab\` serve solo per la pubblicazione sul Play Store.
           EOF
 
       - name: Pubblica la release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "Valida Buoni $VERSIONE" --notes-file note.md
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "Valida Buoni Carte Cultura $VERSIONE" --notes-file note.md

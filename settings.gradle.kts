@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "ValidaBuoni"
+rootProject.name = "ValidaBuoniCarteCultura"
 include(":app")

@@ -4,6 +4,7 @@ Il flusso di rilascio usa come note la sezione della versione del tag: prima di 
 
 ## 1.1.0
 
+- L'app si chiama «Valida Buoni Carte Cultura»; sotto l'icona resta «Valida Buoni».
 - Supporta Android 16: l'app occupa tutto lo schermo e lascia spazio alle barre di sistema e alla tastiera.
 - Barra del titolo con il pulsante Indietro, uguale in tutte le schermate.
 - Il tasto Indietro torna alla pagina precedente del portale e usa l'animazione di sistema.
