@@ -3,12 +3,21 @@ package it.lopo.validabuoni
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.res.ColorStateList
+import android.graphics.Bitmap
+import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Toast
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -23,10 +32,13 @@ class ValidaActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var carta: Carta
+    private var paginaPronta = false
+    private var buonoDaScrivere: String? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
 
         carta = Carta.valueOf(intent.getStringExtra(EXTRA_CARTA) ?: Carta.DOCENTE.name)
         title = carta.nome
@@ -35,8 +47,27 @@ class ValidaActivity : Activity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = object : WebViewClient() {
+                override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+                    paginaPronta = false
+                }
+
                 override fun onPageFinished(view: WebView, url: String) {
+                    paginaPronta = true
                     iniettaAiuto()
+                }
+
+                override fun onReceivedError(
+                    view: WebView,
+                    request: WebResourceRequest,
+                    error: WebResourceError
+                ) {
+                    if (request.isForMainFrame) {
+                        Toast.makeText(
+                            this@ValidaActivity,
+                            "Impossibile caricare la pagina. Controlla la connessione e tocca Ricarica.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
             layoutParams = LinearLayout.LayoutParams(
@@ -44,15 +75,38 @@ class ValidaActivity : Activity() {
             )
         }
 
+        val caricamento = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progressTintList = ColorStateList.valueOf(colore(R.color.primario))
+            progressBackgroundTintList = ColorStateList.valueOf(colore(R.color.sfondo))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(3))
+        }
+        web.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView, percentuale: Int) {
+                caricamento.progress = percentuale
+                caricamento.visibility = if (percentuale < 100) View.VISIBLE else View.INVISIBLE
+            }
+        }
+
         val barra = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(8), dp(4), dp(8), dp(4))
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setBackgroundColor(colore(R.color.superficie))
+            elevation = dp(8).toFloat()
         }
-        barra.addView(pulsante("Leggi QR code", peso = 3f) { leggiCodice() })
-        barra.addView(pulsante("Ricarica", peso = 1f) { web.loadUrl(carta.url) })
+        barra.addView(
+            pulsante("Leggi QR code", R.drawable.ic_qr) { leggiCodice() },
+            LinearLayout.LayoutParams(0, dp(56), 1f)
+        )
+        barra.addView(
+            pulsante(null, R.drawable.ic_ricarica, primario = false) { web.loadUrl(carta.url) },
+            LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(10) }
+        )
 
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            setBackgroundColor(colore(R.color.sfondo))
+            addView(caricamento)
             addView(web)
             addView(barra)
         })
@@ -68,15 +122,6 @@ class ValidaActivity : Activity() {
         web.loadUrl(carta.url)
     }
 
-    private fun pulsante(testo: String, peso: Float, azione: () -> Unit): Button =
-        Button(this).apply {
-            text = testo
-            isAllCaps = false
-            textSize = 18f
-            setOnClickListener { azione() }
-            layoutParams = LinearLayout.LayoutParams(0, dp(64), peso)
-        }
-
     /**
      * Installa nella pagina un piccolo controllo periodico. I due portali sono
      * applicazioni Angular: i campi compaiono dopo il caricamento e ricompaiono
@@ -85,10 +130,19 @@ class ValidaActivity : Activity() {
      * "codiceEsercente" e "codiceVoucher".
      */
     private fun iniettaAiuto() {
+        if (!paginaPronta) return
+        val hostCorrente = Uri.parse(web.url.orEmpty()).host
+        val hostAtteso = Uri.parse(carta.url).host
+        if (hostCorrente == null || hostCorrente != hostAtteso) return
+
         val codice = JSONObject.quote(Impostazioni.codiceEsercente(this, carta))
+        val buono = buonoDaScrivere?.let { "window.__vbBuono = ${JSONObject.quote(it)};" }.orEmpty()
+        buonoDaScrivere = null
+
         val script = """
             (function () {
               window.__vbEsercente = $codice;
+              $buono
               if (window.__vbTimer) return;
               window.__vbScrivi = function (nome, valore) {
                 var campo = document.querySelector('input[formcontrolname="' + nome + '"]');
@@ -139,11 +193,19 @@ class ValidaActivity : Activity() {
         val campo = EditText(this).apply {
             setText(if (candidati.size == 1) candidati[0] else testo)
             textSize = 20f
+            typeface = Typeface.MONOSPACE
+            setTextColor(colore(R.color.testo))
+            background = sfondoCampo()
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+        }
+        val contenitore = FrameLayout(this).apply {
+            setPadding(dp(20), dp(12), dp(20), dp(4))
+            addView(campo)
         }
         AlertDialog.Builder(this)
             .setTitle("Controlla il codice buono")
             .setMessage("Contenuto letto:\n$testo")
-            .setView(campo)
+            .setView(contenitore)
             .setPositiveButton("Usa") { _, _ ->
                 val scelto = campo.text.toString().trim()
                 if (scelto.isNotEmpty()) scriviCodiceBuono(scelto)
@@ -153,8 +215,28 @@ class ValidaActivity : Activity() {
     }
 
     private fun scriviCodiceBuono(codice: String) {
+        buonoDaScrivere = codice
         iniettaAiuto()
-        web.evaluateJavascript("window.__vbBuono = ${JSONObject.quote(codice)};", null)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        web.onResume()
+    }
+
+    override fun onPause() {
+        web.onPause()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        web.destroy()
+        super.onDestroy()
+    }
+
+    override fun onNavigateUp(): Boolean {
+        finish()
+        return true
     }
 
     @Deprecated("Sufficiente per il livello di sistema a cui è destinata l'app")

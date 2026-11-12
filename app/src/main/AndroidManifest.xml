@@ -7,7 +7,7 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="Valida Buoni"
-        android:theme="@android:style/Theme.Material.Light.DarkActionBar">
+        android:theme="@style/Tema">
 
         <!-- Fa scaricare il modulo del lettore di codici già all'installazione. -->
         <meta-data
@@ -16,6 +16,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:theme="@style/Tema.Home"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,10 +27,12 @@
         <activity
             android:name=".ValidaActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".SettingsActivity"
-            android:label="Impostazioni" />
+            android:label="Impostazioni"
+            android:parentActivityName=".MainActivity" />
     </application>
 </manifest>

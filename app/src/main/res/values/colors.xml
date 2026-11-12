@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primario">#1565C0</color>
+    <color name="su_primario">#FFFFFF</color>
+    <color name="barra">#1565C0</color>
+    <color name="barra_scura">#0D47A1</color>
+    <color name="sfondo">#F3F5F9</color>
+    <color name="superficie">#FFFFFF</color>
+    <color name="testo">#1B1F24</color>
+    <color name="testo_attenuato">#5F6670</color>
+    <color name="bordo">#D9DEE5</color>
+    <color name="avviso">#A15C00</color>
+    <color name="increspatura">#22000000</color>
+    <color name="carta_docente">#1565C0</color>
+    <color name="carta_giovani">#00796B</color>
+</resources>
