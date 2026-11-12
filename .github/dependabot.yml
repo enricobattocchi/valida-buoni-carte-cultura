@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # Aggiorna i commit a cui sono fissate le action dei flussi.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
