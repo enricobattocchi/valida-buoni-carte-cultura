@@ -2,6 +2,7 @@ package it.lopo.validabuonicartecultura
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -30,6 +31,8 @@ import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.google.android.gms.tasks.Task
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import org.json.JSONObject
@@ -67,6 +70,14 @@ class ValidaActivity : Activity() {
     /** Avvisi della pagina aperta, ricalcolati a ogni cambio di pagina. */
     private var avvisoBuono: String? = null
     private var campiMancanti = false
+
+    /**
+     * Finestra di controllo del codice aperta: testo letto dal QR e campo con la
+     * bozza, per riaprirla com'era se il sistema ricrea la schermata.
+     */
+    private var letturaInControllo: String? = null
+    private var campoControllo: EditText? = null
+    private var finestraControllo: Dialog? = null
 
     private val controlloCampi = Runnable { controllaCampi() }
     private val tentativoBuono = Runnable { provaAScrivereBuono() }
@@ -182,7 +193,7 @@ class ValidaActivity : Activity() {
         }
         setContentView(schermata(carta.nome, pagina, barra))
 
-        if (Impostazioni.codiceEsercente(this, carta).isEmpty()) {
+        if (savedInstanceState == null && Impostazioni.codiceEsercente(this, carta).isEmpty()) {
             Toast.makeText(
                 this,
                 "Nessun codice esercente salvato per questa carta: aggiungilo nelle Impostazioni.",
@@ -190,7 +201,26 @@ class ValidaActivity : Activity() {
             ).show()
         }
 
-        web.loadUrl(carta.url)
+        // Se il sistema ha chiuso la schermata in background, riprendo da dove era.
+        buonoInAttesa = savedInstanceState?.getString(STATO_BUONO)
+        if (savedInstanceState == null || web.restoreState(savedInstanceState) == null) {
+            web.loadUrl(carta.url)
+        }
+        val lettura = savedInstanceState?.getString(STATO_LETTURA)
+        val bozza = savedInstanceState?.getString(STATO_BOZZA)
+        if (lettura != null && bozza != null) mostraControllo(lettura, bozza)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        web.saveState(outState)
+        buonoInAttesa?.let { outState.putString(STATO_BUONO, it) }
+        val lettura = letturaInControllo
+        val campo = campoControllo
+        if (lettura != null && campo != null) {
+            outState.putString(STATO_LETTURA, lettura)
+            outState.putString(STATO_BOZZA, campo.text.toString())
+        }
     }
 
     private fun caricamentoFallito() {
@@ -409,14 +439,40 @@ class ValidaActivity : Activity() {
         }
     }
 
+    /**
+     * Il lettore di Google apre una schermata sua. Se intanto Android chiude questa
+     * schermata per liberare memoria, il risultato arriverebbe a quella vecchia e
+     * andrebbe perso. Tengo quindi la lettura in corso fuori dalla schermata, in
+     * [letturaInCorso], e ogni schermata ne raccoglie il risultato quando torna in
+     * primo piano. Se Android chiude l'intera app mentre il lettore è aperto, la
+     * lettura invece si perde: il lettore di Google non permette di riprenderla.
+     */
     private fun leggiCodice() {
         val opzioni = GmsBarcodeScannerOptions.Builder().enableAutoZoom().build()
-        GmsBarcodeScanning.getClient(this, opzioni)
-            .startScan()
-            .addOnSuccessListener { codice -> gestisciLettura(codice.rawValue.orEmpty().trim()) }
-            .addOnFailureListener { errore ->
-                Toast.makeText(this, "Lettura non riuscita: ${errore.message}", Toast.LENGTH_LONG).show()
+        val lettura = GmsBarcodeScanning.getClient(this, opzioni).startScan()
+        letturaInCorso = lettura
+        raccogliLettura(lettura)
+    }
+
+    /**
+     * Usa il risultato una volta sola, nella prima schermata che lo riceve. Il
+     * listener è legato alla schermata: Android lo toglie quando la schermata si
+     * ferma, quindi una schermata chiusa non riceve più niente.
+     */
+    private fun raccogliLettura(lettura: Task<Barcode>) {
+        lettura.addOnCompleteListener(this) { finita ->
+            if (letturaInCorso !== finita) return@addOnCompleteListener
+            letturaInCorso = null
+            when {
+                finita.isCanceled -> Unit
+                finita.isSuccessful -> gestisciLettura(finita.result.rawValue.orEmpty().trim())
+                else -> Toast.makeText(
+                    this,
+                    "Lettura non riuscita: ${finita.exception?.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
+        }
     }
 
     /**
@@ -433,6 +489,16 @@ class ValidaActivity : Activity() {
             }
             is CodiceBuono.Lettura.DaControllare -> lettura.proposta
         }
+        mostraControllo(testo, proposta)
+    }
+
+    /**
+     * Finestra per controllare e correggere [proposta] prima di usarla. Riceve la
+     * proposta già pronta, così una bozza ripristinata non passa di nuovo da
+     * [CodiceBuono.leggi], che userebbe subito un testo di 8 caratteri.
+     */
+    private fun mostraControllo(testo: String, proposta: String) {
+        letturaInControllo = testo
         val campo = EditText(this).apply {
             setText(proposta)
             textSize = 20f
@@ -441,7 +507,16 @@ class ValidaActivity : Activity() {
             background = sfondoCampo()
             setPadding(dp(16), dp(12), dp(16), dp(12))
         }
+        campoControllo = campo
         mostraFinestra { finestra ->
+            finestraControllo = finestra
+            finestra.setOnDismissListener {
+                if (finestraControllo === finestra) {
+                    finestraControllo = null
+                    campoControllo = null
+                    letturaInControllo = null
+                }
+            }
             val riga = { margineDp: Int -> LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -471,6 +546,8 @@ class ValidaActivity : Activity() {
     override fun onResume() {
         super.onResume()
         web.onResume()
+        // Il lettore può essersi chiuso mentre questa schermata era ferma o non esisteva ancora.
+        letturaInCorso?.let { raccogliLettura(it) }
     }
 
     override fun onPause() {
@@ -479,6 +556,11 @@ class ValidaActivity : Activity() {
     }
 
     override fun onDestroy() {
+        // Tolgo il riferimento prima di chiudere, così la finestra resta salvata per la nuova schermata.
+        finestraControllo?.let {
+            finestraControllo = null
+            it.dismiss()
+        }
         web.removeCallbacks(controlloCampi)
         web.removeCallbacks(tentativoBuono)
         web.destroy()
@@ -541,6 +623,12 @@ class ValidaActivity : Activity() {
 
     companion object {
         const val EXTRA_CARTA = "carta"
+        private const val STATO_BUONO = "buono"
+        private const val STATO_LETTURA = "lettura"
+        private const val STATO_BOZZA = "bozza"
+
+        /** Lettura del QR in corso: vive con l'app, non con la singola schermata. */
+        private var letturaInCorso: Task<Barcode>? = null
         private const val ATTESA_CAMPI_MS = 6_000L
         private const val ATTESA_BUONO_MS = 3_000L
         private const val INTERVALLO_TENTATIVI_MS = 400L

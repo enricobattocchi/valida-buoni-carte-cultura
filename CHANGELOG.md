@@ -9,6 +9,7 @@ Il flusso di rilascio usa come note la sezione della versione del tag: prima di 
 - Se la pagina Valida Buono non ha i campi attesi, l'app mostra un avviso; se non riesce a scrivere il codice buono, lo copia negli appunti.
 - Un codice buono letto mentre non è aperta la pagina Valida Buono viene inserito quando la apri.
 - Il backup del telefono salva solo i codici esercente, senza i dati delle pagine web.
+- Se il sistema chiude l'app in background, anche mentre stai leggendo un QR, al ritorno ritrovi la pagina, il codice buono letto e la finestra di controllo del codice con le tue correzioni.
 
 ## 1.2.0
 
