@@ -1,4 +1,4 @@
 plugins {
-    id("com.android.application") version "8.10.1" apply false
-    id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+    // Dalla versione 9 il plugin Android compila anche Kotlin: il plugin Kotlin separato non serve più.
+    id("com.android.application") version "9.5.1" apply false
 }
