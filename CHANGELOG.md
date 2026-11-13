@@ -6,6 +6,8 @@ Il flusso di rilascio usa come note la sezione della versione del tag: prima di 
 
 - I collegamenti verso siti diversi dal ministero del portale si aprono nel browser, non dentro l'app.
 - Quando il portale non risponde compare una pagina con il pulsante Riprova.
+- Se la pagina Valida Buono non ha i campi attesi, l'app mostra un avviso; se non riesce a scrivere il codice buono, lo copia negli appunti.
+- Un codice buono letto mentre non è aperta la pagina Valida Buono viene inserito quando la apri.
 
 ## 1.2.0
 

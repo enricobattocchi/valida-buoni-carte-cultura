@@ -3,6 +3,8 @@ package it.lopo.validabuonicartecultura
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -10,6 +12,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.webkit.WebChromeClient
@@ -25,6 +28,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -39,10 +43,33 @@ class ValidaActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var carta: Carta
+    private lateinit var avviso: TextView
     private lateinit var errore: View
     private var paginaPronta = false
     private var erroreNelCaricamento = false
-    private var buonoDaScrivere: String? = null
+
+    /**
+     * Codice buono letto e non ancora scritto nel modulo. L'app lo tiene solo qui:
+     * la pagina riceve il comando di scriverlo e risponde subito se c'è riuscita.
+     */
+    private var buonoInAttesa: String? = null
+
+    /** Fino a quando cercare il campo del codice buono sul modulo aperto; 0 se non si cerca. */
+    private var scadenzaBuono = 0L
+
+    /**
+     * Cresce a ogni cambio di pagina. La pagina risponde ai comandi dopo un po':
+     * una risposta chiesta su una pagina precedente viene ignorata, perché la
+     * pagina nuova fa già il proprio controllo.
+     */
+    private var numeroPagina = 0
+
+    /** Avvisi della pagina aperta, ricalcolati a ogni cambio di pagina. */
+    private var avvisoBuono: String? = null
+    private var campiMancanti = false
+
+    private val controlloCampi = Runnable { controllaCampi() }
+    private val tentativoBuono = Runnable { provaAScrivereBuono() }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,10 +95,12 @@ class ValidaActivity : Activity() {
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                     paginaPronta = false
                     erroreNelCaricamento = false
+                    numeroPagina++
                 }
 
                 override fun doUpdateVisitedHistory(view: WebView, url: String, ricarica: Boolean) {
                     aggiornaIndietro()
+                    paginaCambiata()
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
@@ -80,6 +109,7 @@ class ValidaActivity : Activity() {
                     mostraErrore(false)
                     paginaPronta = true
                     iniettaAiuto()
+                    paginaCambiata()
                 }
 
                 override fun onReceivedError(
@@ -132,6 +162,13 @@ class ValidaActivity : Activity() {
             LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(10) }
         )
 
+        avviso = testo("", 15f, R.color.avviso).apply {
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+            setBackgroundColor(colore(R.color.superficie))
+            visibility = View.GONE
+            // TalkBack legge l'avviso quando compare o cambia.
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        }
         errore = paginaErrore()
         val area = FrameLayout(this).apply {
             addView(web, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
@@ -140,6 +177,7 @@ class ValidaActivity : Activity() {
         val pagina = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(caricamento)
+            addView(avviso)
             addView(area, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         }
         setContentView(schermata(carta.nome, pagina, barra))
@@ -159,6 +197,8 @@ class ValidaActivity : Activity() {
         erroreNelCaricamento = true
         paginaPronta = false
         mostraErrore(true)
+        campiMancanti = false
+        aggiornaAvviso()
     }
 
     /**
@@ -218,26 +258,22 @@ class ValidaActivity : Activity() {
     }
 
     /**
-     * Installa nella pagina un piccolo controllo periodico. I due portali sono
-     * applicazioni Angular: i campi compaiono dopo il caricamento e ricompaiono
-     * vuoti quando si torna al modulo, quindi un riempimento una tantum non basta.
-     * I campi si riconoscono dall'attributo formcontrolname, uguale sui due siti:
-     * "codiceEsercente" e "codiceVoucher".
+     * Installa nella pagina un piccolo controllo periodico per il codice esercente.
+     * I due portali sono applicazioni Angular: i campi compaiono dopo il caricamento
+     * e ricompaiono vuoti quando si torna al modulo, quindi un riempimento una
+     * tantum non basta. Il controllo vive dentro la pagina, sparisce con lei a ogni
+     * caricamento e costa una ricerca nella pagina ogni 400 ms.
+     * Definisce anche window.__vbScrivi, che [provaAScrivereBuono] usa per il codice
+     * buono. I campi si riconoscono dall'attributo formcontrolname, uguale sui due
+     * siti: "codiceEsercente" e "codiceVoucher". Se mancano, [controllaCampi] lo segnala.
      */
     private fun iniettaAiuto() {
-        if (!paginaPronta) return
-        val hostCorrente = Uri.parse(web.url.orEmpty()).host
-        val hostAtteso = Uri.parse(carta.url).host
-        if (hostCorrente == null || hostCorrente != hostAtteso) return
+        if (!paginaPronta || !suPaginaDelPortale()) return
 
         val codice = JSONObject.quote(Impostazioni.codiceEsercente(this, carta))
-        val buono = buonoDaScrivere?.let { "window.__vbBuono = ${JSONObject.quote(it)};" }.orEmpty()
-        buonoDaScrivere = null
-
         val script = """
             (function () {
               window.__vbEsercente = $codice;
-              $buono
               if (window.__vbTimer) return;
               window.__vbScrivi = function (nome, valore) {
                 var campo = document.querySelector('input[formcontrolname="' + nome + '"]');
@@ -254,13 +290,123 @@ class ValidaActivity : Activity() {
                 if (campo && !campo.value && document.activeElement !== campo && window.__vbEsercente) {
                   window.__vbScrivi('codiceEsercente', window.__vbEsercente);
                 }
-                if (window.__vbBuono && window.__vbScrivi('codiceVoucher', window.__vbBuono)) {
-                  window.__vbBuono = null;
-                }
               }, 400);
             })();
         """.trimIndent()
         web.evaluateJavascript(script, null)
+    }
+
+    private fun suPaginaDelPortale(): Boolean {
+        val hostCorrente = Uri.parse(web.url.orEmpty()).host
+        return hostCorrente != null && hostCorrente == Uri.parse(carta.url).host
+    }
+
+    /** Vero se è aperta, e caricata, la pagina Valida Buono del portale. */
+    private fun suModulo(): Boolean =
+        paginaPronta && suPaginaDelPortale() &&
+            Uri.parse(web.url.orEmpty()).fragment.orEmpty().contains("validaBuono", ignoreCase = true)
+
+    /**
+     * Chiamata a ogni cambio di pagina, anche quando il portale cambia pagina
+     * senza ricaricarla. Gli avvisi riguardano la pagina aperta, quindi li azzero
+     * e li ricalcolo: il controllo dei campi riparte e il codice buono in attesa,
+     * se c'è, prova a entrare nel nuovo modulo.
+     */
+    private fun paginaCambiata() {
+        numeroPagina++
+        campiMancanti = false
+        avvisoBuono = null
+        aggiornaAvviso()
+        programmaControlloCampi()
+        provaAScrivereBuono()
+    }
+
+    /** Mostra l'avviso più importante: quello sul codice buono, poi quello sui campi. */
+    private fun aggiornaAvviso() {
+        val messaggio = avvisoBuono ?: if (campiMancanti) {
+            "Non trovo i campi del modulo: forse il portale è cambiato. " +
+                "Inserisci i codici a mano e segnala il problema."
+        } else {
+            null
+        }
+        avviso.text = messaggio.orEmpty()
+        avviso.visibility = if (messaggio == null) View.GONE else View.VISIBLE
+    }
+
+    private fun programmaControlloCampi() {
+        web.removeCallbacks(controlloCampi)
+        web.postDelayed(controlloCampi, ATTESA_CAMPI_MS)
+    }
+
+    /**
+     * Se dopo qualche secondo la pagina Valida Buono non ha i campi che l'app cerca,
+     * il portale è probabilmente cambiato: lo dico, invece di non fare nulla in silenzio.
+     */
+    private fun controllaCampi() {
+        if (isDestroyed || !suModulo()) return
+        val numero = numeroPagina
+        web.evaluateJavascript(
+            "!!document.querySelector('input[formcontrolname=\"codiceEsercente\"]')" +
+                " && !!document.querySelector('input[formcontrolname=\"codiceVoucher\"]')"
+        ) { risultato ->
+            if (isDestroyed || numeroPagina != numero) return@evaluateJavascript
+            campiMancanti = risultato == "false"
+            aggiornaAvviso()
+        }
+    }
+
+    private fun scriviCodiceBuono(codice: String) {
+        buonoInAttesa = codice
+        scadenzaBuono = 0L
+        provaAScrivereBuono()
+    }
+
+    /**
+     * Prova a scrivere il codice buono in attesa nel modulo.
+     * - Se la pagina Valida Buono non è aperta o non è pronta, il codice resta in
+     *   attesa con un avviso e viene scritto al prossimo cambio di pagina.
+     * - Sul modulo riprova per qualche secondo, il tempo che Angular mostri il campo.
+     * - Se il campo non compare, copia il codice negli appunti da incollare a mano.
+     * Una risposta vale solo se nel frattempo non è cambiata pagina e il codice in
+     * attesa è ancora quello: una lettura nuova sostituisce la vecchia.
+     */
+    private fun provaAScrivereBuono() {
+        web.removeCallbacks(tentativoBuono)
+        if (isDestroyed) return
+        val codice = buonoInAttesa ?: return
+        if (!suModulo()) {
+            scadenzaBuono = 0L
+            avvisoBuono = "Il codice buono $codice verrà inserito appena è pronta la pagina Valida Buono."
+            aggiornaAvviso()
+            return
+        }
+        if (scadenzaBuono == 0L) scadenzaBuono = SystemClock.uptimeMillis() + ATTESA_BUONO_MS
+        val numero = numeroPagina
+        web.evaluateJavascript(
+            "window.__vbScrivi ? window.__vbScrivi('codiceVoucher', ${JSONObject.quote(codice)}) : false"
+        ) { risultato ->
+            if (isDestroyed || numeroPagina != numero || buonoInAttesa != codice) return@evaluateJavascript
+            when {
+                risultato == "true" -> {
+                    buonoInAttesa = null
+                    scadenzaBuono = 0L
+                    avvisoBuono = null
+                }
+                SystemClock.uptimeMillis() < scadenzaBuono -> {
+                    web.postDelayed(tentativoBuono, INTERVALLO_TENTATIVI_MS)
+                    return@evaluateJavascript
+                }
+                else -> {
+                    buonoInAttesa = null
+                    scadenzaBuono = 0L
+                    getSystemService(ClipboardManager::class.java)
+                        ?.setPrimaryClip(ClipData.newPlainText("Codice buono", codice))
+                    avvisoBuono =
+                        "Non trovo il campo del codice buono. Il codice $codice è negli appunti: incollalo a mano."
+                }
+            }
+            aggiornaAvviso()
+        }
     }
 
     private fun leggiCodice() {
@@ -322,11 +468,6 @@ class ValidaActivity : Activity() {
         }
     }
 
-    private fun scriviCodiceBuono(codice: String) {
-        buonoDaScrivere = codice
-        iniettaAiuto()
-    }
-
     override fun onResume() {
         super.onResume()
         web.onResume()
@@ -338,6 +479,8 @@ class ValidaActivity : Activity() {
     }
 
     override fun onDestroy() {
+        web.removeCallbacks(controlloCampi)
+        web.removeCallbacks(tentativoBuono)
         web.destroy()
         super.onDestroy()
     }
@@ -398,5 +541,8 @@ class ValidaActivity : Activity() {
 
     companion object {
         const val EXTRA_CARTA = "carta"
+        private const val ATTESA_CAMPI_MS = 6_000L
+        private const val ATTESA_BUONO_MS = 3_000L
+        private const val INTERVALLO_TENTATIVI_MS = 400L
     }
 }

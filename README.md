@@ -16,8 +16,9 @@ Impostazioni e riempie il codice buono leggendo un QR o un codice a barre.
 
 ## Se i portali cambiano
 
-Indirizzi in `Carta.kt`; nomi dei campi (`codiceEsercente`, `codiceVoucher`)
-in `ValidaActivity.kt`.
+Indirizzi e domini in `Carta.kt`; nomi dei campi (`codiceEsercente`,
+`codiceVoucher`) in `ValidaActivity.kt`. Se la pagina Valida Buono non ha più
+quei campi, l'app mostra un avviso invece di non fare nulla.
 
 ## Licenza
 
