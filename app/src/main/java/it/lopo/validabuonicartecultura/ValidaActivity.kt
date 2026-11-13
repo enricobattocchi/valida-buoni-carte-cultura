@@ -10,17 +10,21 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.webkit.WebChromeClient
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.Toast
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -35,7 +39,9 @@ class ValidaActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var carta: Carta
+    private lateinit var errore: View
     private var paginaPronta = false
+    private var erroreNelCaricamento = false
     private var buonoDaScrivere: String? = null
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -61,6 +67,7 @@ class ValidaActivity : Activity() {
 
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                     paginaPronta = false
+                    erroreNelCaricamento = false
                 }
 
                 override fun doUpdateVisitedHistory(view: WebView, url: String, ricarica: Boolean) {
@@ -68,6 +75,9 @@ class ValidaActivity : Activity() {
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
+                    // Dopo un errore arriva comunque onPageFinished, per la pagina di errore di sistema.
+                    if (erroreNelCaricamento) return
+                    mostraErrore(false)
                     paginaPronta = true
                     iniettaAiuto()
                 }
@@ -77,18 +87,21 @@ class ValidaActivity : Activity() {
                     request: WebResourceRequest,
                     error: WebResourceError
                 ) {
-                    if (request.isForMainFrame) {
-                        Toast.makeText(
-                            this@ValidaActivity,
-                            "Impossibile caricare la pagina. Controlla la connessione e tocca Ricarica.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    if (request.isForMainFrame) caricamentoFallito()
+                }
+
+                // Errori del server, per esempio 503 durante una manutenzione: senza questo
+                // si vedrebbe la risposta grezza del server al posto della schermata con Riprova.
+                // Conta solo la pagina principale: i portali caricano i dati a parte, e un
+                // errore lì lo mostra il portale stesso.
+                override fun onReceivedHttpError(
+                    view: WebView,
+                    request: WebResourceRequest,
+                    errorResponse: WebResourceResponse
+                ) {
+                    if (request.isForMainFrame && errorResponse.statusCode >= 400) caricamentoFallito()
                 }
             }
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
-            )
         }
 
         val caricamento = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
@@ -119,10 +132,15 @@ class ValidaActivity : Activity() {
             LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(10) }
         )
 
+        errore = paginaErrore()
+        val area = FrameLayout(this).apply {
+            addView(web, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+            addView(errore, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        }
         val pagina = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(caricamento)
-            addView(web)
+            addView(area, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         }
         setContentView(schermata(carta.nome, pagina, barra))
 
@@ -135,6 +153,59 @@ class ValidaActivity : Activity() {
         }
 
         web.loadUrl(carta.url)
+    }
+
+    private fun caricamentoFallito() {
+        erroreNelCaricamento = true
+        paginaPronta = false
+        mostraErrore(true)
+    }
+
+    /**
+     * La schermata di errore sostituisce la pagina di errore di sistema. Nascondo
+     * anche la WebView, così TalkBack e la tastiera non raggiungono la pagina
+     * coperta. La schermata resta finché un nuovo caricamento non riesce: durante
+     * il tentativo si vede la barra di avanzamento, non la pagina di sistema.
+     */
+    private fun mostraErrore(visibile: Boolean) {
+        errore.visibility = if (visibile) View.VISIBLE else View.GONE
+        web.visibility = if (visibile) View.INVISIBLE else View.VISIBLE
+    }
+
+    /**
+     * Il contenuto sta al centro quando c'è spazio e scorre quando non c'è, per
+     * esempio in orizzontale o con i caratteri ingranditi.
+     */
+    private fun paginaErrore(): View = ScrollView(this).apply {
+        isFillViewport = true
+        setBackgroundColor(colore(R.color.sfondo))
+        isClickable = true
+        visibility = View.GONE
+        // TalkBack annuncia la schermata quando compare.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) accessibilityPaneTitle = "Pagina non raggiunta"
+        addView(contenutoErrore())
+    }
+
+    private fun contenutoErrore(): View = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER
+        setPadding(dp(32), dp(32), dp(32), dp(32))
+
+        val riga = { margineDp: Int -> LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = dp(margineDp) } }
+
+        addView(testo("Pagina non raggiunta", 20f, grassetto = true).apply { gravity = Gravity.CENTER })
+        addView(
+            testo(
+                "Il portale non risponde o non è disponibile. Controlla la connessione a Internet e riprova.",
+                16f,
+                R.color.testo_attenuato
+            ).apply { gravity = Gravity.CENTER },
+            riga(12)
+        )
+        addView(pulsante("Riprova", R.drawable.ic_ricarica) { web.reload() }, riga(24))
     }
 
     /** Apre nel browser, o nell'app adatta, gli indirizzi che non sono del ministero del portale. */

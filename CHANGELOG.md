@@ -5,6 +5,7 @@ Il flusso di rilascio usa come note la sezione della versione del tag: prima di 
 ## 1.3.0
 
 - I collegamenti verso siti diversi dal ministero del portale si aprono nel browser, non dentro l'app.
+- Quando il portale non risponde compare una pagina con il pulsante Riprova.
 
 ## 1.2.0
 
