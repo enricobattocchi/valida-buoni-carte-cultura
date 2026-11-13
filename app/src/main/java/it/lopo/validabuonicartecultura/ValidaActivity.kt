@@ -169,7 +169,7 @@ class ValidaActivity : Activity() {
             LinearLayout.LayoutParams(0, dp(56), 1f)
         )
         barra.addView(
-            pulsante(null, R.drawable.ic_ricarica, primario = false) { web.loadUrl(carta.url) },
+            pulsante(null, R.drawable.ic_ricarica, primario = false) { ricarica() },
             LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(10) }
         )
 
@@ -220,6 +220,29 @@ class ValidaActivity : Activity() {
         if (lettura != null && campo != null) {
             outState.putString(STATO_LETTURA, lettura)
             outState.putString(STATO_BOZZA, campo.text.toString())
+        }
+    }
+
+    /**
+     * Riporta alla pagina Valida Buono scaricandola di nuovo dal portale.
+     * Gli indirizzi dei portali hanno la pagina dopo il "#": aprire l'indirizzo della
+     * pagina già aperta, o uno che cambia solo dopo il "#", per la WebView è uno
+     * spostamento interno e non scarica niente. Così Ricarica non ricaricava e, senza
+     * rete, non mostrava l'errore. In quei casi ricarico esplicitamente la pagina.
+     */
+    private fun ricarica() {
+        val aperta = Uri.parse(web.url.orEmpty())
+        val valida = Uri.parse(carta.url)
+        val stessoDocumento = aperta.scheme == valida.scheme && aperta.host == valida.host &&
+            aperta.path == valida.path && aperta.query == valida.query
+        when {
+            !stessoDocumento -> web.loadUrl(carta.url)
+            aperta.fragment == valida.fragment -> web.reload()
+            // Porto la pagina su Valida Buono senza aggiungere una voce alla cronologia, poi ricarico.
+            else -> web.evaluateJavascript(
+                "location.replace(${JSONObject.quote(carta.url)}); location.reload();",
+                null
+            )
         }
     }
 
@@ -594,7 +617,8 @@ class ValidaActivity : Activity() {
     /**
      * Quanti passi indietro servono per arrivare a una pagina diversa da quella
      * aperta, o null se non ce n'è una. Salta le copie della pagina aperta, che
-     * Ricarica aggiunge alla cronologia, e gli indirizzi che finiscono in "#/":
+     * possono finire nella cronologia quando il portale riapre la stessa pagina,
+     * e gli indirizzi che finiscono in "#/":
      * su entrambi i portali quella pagina rimanda subito alla Home, quindi
      * tornarci riporterebbe sempre alla Home.
      */
