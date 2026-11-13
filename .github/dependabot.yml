@@ -5,3 +5,13 @@ updates:
     directory: /
     schedule:
       interval: monthly
+
+  # Aggiorna Gradle, il plugin Android e le librerie dell'app.
+  # Gli aggiornamenti minori e le correzioni arrivano in una sola pull request.
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      gradle-minori:
+        update-types: [minor, patch]
