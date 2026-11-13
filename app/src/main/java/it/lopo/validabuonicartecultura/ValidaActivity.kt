@@ -182,19 +182,21 @@ class ValidaActivity : Activity() {
     }
 
     /**
-     * Il codice buono è di 8 caratteri. Se il QR contiene esattamente quello lo uso
-     * subito; se contiene altro (per esempio un indirizzo) propongo il candidato
-     * trovato e lo lascio correggere prima di scriverlo nella pagina.
+     * Se il QR contiene solo il codice buono lo uso subito; se contiene altro (per
+     * esempio un indirizzo) propongo il candidato trovato e lo lascio correggere
+     * prima di scriverlo nella pagina. Le regole sono in [CodiceBuono].
      */
     private fun gestisciLettura(testo: String) {
-        if (testo.isEmpty()) return
-        if (CODICE_ESATTO.matches(testo)) {
-            scriviCodiceBuono(testo)
-            return
+        val proposta = when (val lettura = CodiceBuono.leggi(testo)) {
+            null -> return
+            is CodiceBuono.Lettura.Esatto -> {
+                scriviCodiceBuono(lettura.codice)
+                return
+            }
+            is CodiceBuono.Lettura.DaControllare -> lettura.proposta
         }
-        val candidati = CODICE_NEL_TESTO.findAll(testo).map { it.value }.toList()
         val campo = EditText(this).apply {
-            setText(if (candidati.size == 1) candidati[0] else testo)
+            setText(proposta)
             textSize = 20f
             typeface = Typeface.MONOSPACE
             setTextColor(colore(R.color.testo))
@@ -304,7 +306,5 @@ class ValidaActivity : Activity() {
 
     companion object {
         const val EXTRA_CARTA = "carta"
-        private val CODICE_ESATTO = Regex("^[A-Za-z0-9]{8}$")
-        private val CODICE_NEL_TESTO = Regex("(?<![A-Za-z0-9])[A-Za-z0-9]{8}(?![A-Za-z0-9])")
     }
 }

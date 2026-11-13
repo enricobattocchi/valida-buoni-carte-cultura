@@ -51,4 +51,6 @@ android {
 dependencies {
     // Lettore di QR e codici a barre di Google: non richiede il permesso fotocamera.
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+
+    testImplementation("junit:junit:4.13.2")
 }
