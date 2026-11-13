@@ -1,6 +1,9 @@
 name: Compila APK
+# I tag di versione hanno già il flusso Rilascio: qui bastano main e le pull request.
 on:
   push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 jobs:
   build:
@@ -12,7 +15,39 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
-      - run: chmod +x gradlew && ./gradlew assembleDebug
+      - run: chmod +x gradlew
+      # Basta la variante debug: "test" rifarebbe gli stessi test anche sulla release.
+      - name: Esegue i test
+        run: ./gradlew testDebugUnitTest
+      - name: Riepilogo dei test
+        if: always()
+        run: |
+          python3 - <<'FINE' | tee -a "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          righe, falliti = [], []
+          totali = [0, 0, 0]
+          for file in sorted(glob.glob("app/build/test-results/testDebugUnitTest/*.xml")):
+              s = ET.parse(file).getroot()
+              n = int(s.get("tests"))
+              ko = int(s.get("failures")) + int(s.get("errors"))
+              saltati = int(s.get("skipped"))
+              totali = [totali[0] + n, totali[1] + ko, totali[2] + saltati]
+              righe.append(f"| {s.get('name').split('.')[-1]} | {n} | {ko} | {saltati} |")
+              for caso in s.iter("testcase"):
+                  if caso.find("failure") is not None or caso.find("error") is not None:
+                      falliti.append(f"- {caso.get('classname').split('.')[-1]}.{caso.get('name')}")
+          if not righe:
+              print("### Test\n\nNessun risultato: i test non sono stati eseguiti.")
+          else:
+              print("### Test\n")
+              print("| Classe | Test | Falliti | Saltati |\n| --- | ---: | ---: | ---: |")
+              print("\n".join(righe))
+              print(f"| **Totale** | **{totali[0]}** | **{totali[1]}** | **{totali[2]}** |")
+              if falliti:
+                  print("\n**Test falliti:**\n\n" + "\n".join(falliti))
+          FINE
+      - name: Compila l'APK
+        run: ./gradlew assembleDebug
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ValidaBuoniCarteCultura-apk
