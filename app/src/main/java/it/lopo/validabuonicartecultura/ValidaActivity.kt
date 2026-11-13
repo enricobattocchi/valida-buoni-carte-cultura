@@ -2,6 +2,8 @@ package it.lopo.validabuonicartecultura
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Typeface
@@ -47,6 +49,16 @@ class ValidaActivity : Activity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    if (!request.isForMainFrame) return false
+                    val indirizzo = request.url
+                    val schema = indirizzo.scheme?.lowercase()
+                    if (schema == "about" || schema == "javascript") return false
+                    if (carta.restaNellApp(indirizzo.scheme, indirizzo.host)) return false
+                    apriFuori(indirizzo)
+                    return true
+                }
+
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                     paginaPronta = false
                 }
@@ -123,6 +135,15 @@ class ValidaActivity : Activity() {
         }
 
         web.loadUrl(carta.url)
+    }
+
+    /** Apre nel browser, o nell'app adatta, gli indirizzi che non sono del ministero del portale. */
+    private fun apriFuori(indirizzo: Uri) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, indirizzo).addCategory(Intent.CATEGORY_BROWSABLE))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, "Nessuna app può aprire questo collegamento.", Toast.LENGTH_LONG).show()
+        }
     }
 
     /**

@@ -2,6 +2,10 @@
 
 Il flusso di rilascio usa come note la sezione della versione del tag: prima di creare il tag `vX.Y.Z`, aggiungi qui la sezione `## X.Y.Z`. Scrivi ogni paragrafo e ogni punto su una sola riga: nelle note delle release GitHub mostra ogni a capo.
 
+## 1.3.0
+
+- I collegamenti verso siti diversi dal ministero del portale si aprono nel browser, non dentro l'app.
+
 ## 1.2.0
 
 - L'app si chiama «Valida Buoni Carte Cultura»; sotto l'icona resta «Valida Buoni».
