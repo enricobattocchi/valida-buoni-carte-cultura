@@ -5,6 +5,8 @@
 
     <application
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/regole_backup"
+        android:fullBackupContent="@xml/regole_backup_vecchie"
         android:icon="@drawable/ic_launcher"
         android:label="Valida Buoni Carte Cultura"
         android:enableOnBackInvokedCallback="true"

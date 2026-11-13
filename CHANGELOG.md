@@ -8,6 +8,7 @@ Il flusso di rilascio usa come note la sezione della versione del tag: prima di 
 - Quando il portale non risponde compare una pagina con il pulsante Riprova.
 - Se la pagina Valida Buono non ha i campi attesi, l'app mostra un avviso; se non riesce a scrivere il codice buono, lo copia negli appunti.
 - Un codice buono letto mentre non è aperta la pagina Valida Buono viene inserito quando la apri.
+- Il backup del telefono salva solo i codici esercente, senza i dati delle pagine web.
 
 ## 1.2.0
 
