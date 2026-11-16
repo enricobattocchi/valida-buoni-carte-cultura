@@ -46,8 +46,10 @@ jobs:
               if falliti:
                   print("\n**Test falliti:**\n\n" + "\n".join(falliti))
           FINE
+      # Anche la versione di rilascio, non firmata: passa da R8 come quella pubblicata,
+      # così un problema di riduzione del codice si vede qui e non al momento del rilascio.
       - name: Compila l'APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug assembleRelease --warning-mode all
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ValidaBuoniCarteCultura-apk
