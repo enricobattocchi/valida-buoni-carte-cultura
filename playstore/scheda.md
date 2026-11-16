@@ -28,7 +28,7 @@ COME FUNZIONA
 
 RISPETTO DELLA PRIVACY
 • Nessun permesso fotocamera richiesto: la lettura del QR usa il lettore di sistema di Google Play Services.
-• I codici esercente restano salvati solo sul tuo telefono.
+• I codici esercente restano sul tuo telefono e non vengono mai inviati allo sviluppatore.
 • Nessuna pubblicità, nessun tracciamento, nessun server intermedio.
 • Codice sorgente aperto (licenza GPLv3): https://github.com/enricobattocchi/valida-buoni-carte-cultura
 
