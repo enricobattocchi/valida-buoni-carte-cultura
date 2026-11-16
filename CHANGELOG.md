@@ -2,6 +2,10 @@
 
 Il flusso di rilascio usa come note la sezione della versione del tag: prima di creare il tag `vX.Y.Z`, aggiungi qui la sezione `## X.Y.Z`. Scrivi ogni paragrafo e ogni punto su una sola riga: nelle note delle release GitHub mostra ogni a capo.
 
+## 1.3.2
+
+- La finestra Informazioni descrive con esattezza dove restano i codici esercente.
+
 ## 1.3.1
 
 - Aggiornati gli strumenti con cui è costruita l'app. Nessuna novità visibile.
