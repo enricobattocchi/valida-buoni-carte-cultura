@@ -137,7 +137,7 @@ class MainActivity : Activity() {
         ), riga(20))
         addView(testo(
             "La conferma della validazione resta sempre a te, sulla pagina del portale. " +
-                "I codici esercente restano solo su questo telefono.",
+                "I codici esercente restano su questo telefono e non vengono mai inviati allo sviluppatore.",
             16f
         ), riga(12))
         addView(testo(
