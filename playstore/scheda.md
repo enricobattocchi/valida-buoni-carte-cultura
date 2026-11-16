@@ -75,5 +75,5 @@ https://enricobattocchi.github.io/valida-buoni-carte-cultura/
    * «La mia app non offre funzionalità finanziarie» (è uno strumento di utilità per compilare il modulo web pubblico di validazione buoni).
 9. **Categoria e contatti dello store**:
    * Categoria: **Strumenti** (oppure **Economia / Affari**)
-   * Email di contatto: `lopo@lopo.it`
+   * Email di contatto: `app@lopo.it`
    * Sito web (facoltativo): `https://github.com/enricobattocchi/valida-buoni-carte-cultura`
